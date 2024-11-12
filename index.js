@@ -68,7 +68,10 @@ app.post('/api/shorturl', async (req, res) => {
         }
 
         // If the URL does not exist, create a new short URL
-        const shortUrl = Math.floor(Math.random() * 9999) + 1;
+        // const shortUrl = Math.floor(Math.random() * 9999) + 1;
+        const count = await UrlShortner.countDocuments();
+        const shortUrl = count + 1;
+
         const newURL = new UrlShortner({ original_url: url, short_url: shortUrl });
 
         // Save the new URL to the database
