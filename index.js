@@ -49,43 +49,34 @@ app.post('/api/shorturl', async (req, res) => {
   if (!isValidUrl(url)) {
     return res.status(400).json({ error: "Invalid URL" });
   }
+
   try {
-    // Parse and extract the hostname from the URL
     const hostname = new URL(url).hostname;
 
-    // Check if the hostname is valid
     dns.lookup(hostname, async (err, address) => {
       if (err) {
-        console.error(err);
-        return res.status(400).json({ error: "Invalid Hostname" });
-      } else {
-        // Check if the URL already exists in the database
-        const getUrl = await UrlShortner.findOne({ original_url: url });
-        
-        if (getUrl) {
-          // If the URL exists, return the existing short URL
-          return res.json({ original_url: getUrl.original_url, short_url: getUrl.short_url });
-        }
-
-        // If the URL does not exist, create a new short URL
-        // const shortUrl = Math.floor(Math.random() * 9999) + 1;
-        const count = await UrlShortner.countDocuments();
-        const shortUrl = count + 1;
-
-        const newURL = new UrlShortner({ original_url: url, short_url: shortUrl });
-
-        // Save the new URL to the database
-        await newURL.save();
-
-        // Send the response with the new short URL
-        res.json({ original_url: url, short_url: shortUrl });
+        return res.status(400).json({ error: "Invalid hostname" });
       }
+
+      const getUrl = await UrlShortner.findOne({ original_url: url });
+      if (getUrl) {
+        return res.json({ original_url: getUrl.original_url, short_url: getUrl.short_url });
+      }
+
+      const count = await UrlShortner.countDocuments();
+      const shortUrl = count + 1;
+
+      const newURL = new UrlShortner({ original_url: url, short_url: shortUrl });
+      await newURL.save();
+
+      res.json({ original_url: url, short_url: shortUrl });
     });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Server Error" });
   }
 });
+
 
 app.get('/api/shorturl/:shorturl',async(req,res)=>{
   const {shorturl} = req.params;
